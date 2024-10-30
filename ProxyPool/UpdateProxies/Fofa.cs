@@ -32,7 +32,7 @@ namespace ProxyPool.UpdateProxies
             using var httpClient = new HttpClient();
             // 将查询条件进行 Base64 编码
             var encodedQuery = Convert.ToBase64String(Encoding.UTF8.GetBytes(Query));
-            string url = $"https://fofa.info/api/v1/search/all?key={FofaKey}&qbase64={encodedQuery}&fields=ip,port&size=100";
+            string url = $"https://fofa.info/api/v1/search/all?key={FofaKey}&qbase64={encodedQuery}&fields=ip,port&size=300";
             
             var response = await httpClient.GetStringAsync(url);
             var json = JObject.Parse(response);
@@ -56,7 +56,16 @@ namespace ProxyPool.UpdateProxies
 
         private static async Task SaveProxiesToFileAsync(string[] proxies, string filePath)
         {
-            await File.WriteAllLinesAsync(filePath, proxies);
+            // 使用 FileStream 和 StreamWriter 以追加模式写入文件
+            using (FileStream stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                foreach (var proxy in proxies)
+                {
+                    await writer.WriteLineAsync(proxy);
+                }
+            }
         }
+
     }
 }

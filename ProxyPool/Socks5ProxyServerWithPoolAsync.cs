@@ -1,4 +1,5 @@
-﻿using System.Buffers.Binary;
+﻿using ProxyPool.Model;
+using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,6 +13,7 @@ namespace ProxyPool
         private static (string IP, int Port) currentProxy;
         public static async Task Start()
         {
+
             // 从文件加载代理池并验证代理可用性
             await LoadAndValidateProxyPoolAsync("ProxyPool.txt");
 
@@ -37,31 +39,44 @@ namespace ProxyPool
 
             var validProxies = new List<(string, int)>();
             string[] lines = File.ReadAllLines(filePath);
+            var tasks = new List<Task>();
 
             foreach (var line in lines)
             {
-                var parts = line.Split(':');
-                if (parts.Length == 2 &&
-                    IPAddress.TryParse(parts[0], out var ip) &&
-                    int.TryParse(parts[1], out var port))
+                tasks.Add(Task.Run(async () =>
                 {
-                    // 验证代理可用性
-                    if (await IsProxyAvailable(ip.ToString(), port))
+                    var parts = line.Split(':');
+                    if (parts.Length == 2 &&
+                        IPAddress.TryParse(parts[0], out var ip) &&
+                        int.TryParse(parts[1], out var port))
                     {
-                        validProxies.Add((ip.ToString(), port));
-                        Console.WriteLine($"可用代理：{ip}:{port}");
+                        // 验证代理可用性
+                        if (await IsProxyAvailable(ip.ToString(), port))
+                        {
+                            lock (validProxies) // 线程安全地添加到列表
+                            {
+                                validProxies.Add((ip.ToString(), port));
+                            }
+                            Console.WriteLine($"可用代理：{ip}:{port}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"不可用代理：{ip}:{port}");
+                        }
                     }
-                    else
-                    {
-                        Console.WriteLine($"不可用代理：{ip}:{port}");
-                    }
-                }
+                }));
             }
 
+            await Task.WhenAll(tasks); // 等待所有代理验证任务完成
             // 更新代理池为可用的代理
             proxyPool = validProxies;
-            await UpdateProxyPoolFileAsync(filePath, validProxies);
+            await UpdateProxyPoolFileAsync(filePath, validProxies); // 更新代理池文件
+            if(proxyPool==null || proxyPool.Count == 0)
+            {
+                throw new Exception("无可用代理。");
+            }
         }
+
 
         private static async Task<bool> IsProxyAvailable(string ip, int port)
         {
@@ -103,7 +118,18 @@ namespace ProxyPool
 
         private static async Task AppendTextAsync(string filePath, List<string> contentList)
         {
-            // 使用FileStream异步写入文件，并确保是追加模式
+
+            // 如果 contentList 为空或元素个数为 0，则清空文件内容
+            if (contentList == null || contentList.Count == 0)
+            {
+                using (FileStream stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                {
+                    stream.SetLength(0); // 清空文件内容
+                }
+                return;
+            }
+
+            // 使用 FileStream 异步写入文件，并确保是追加模式
             using (FileStream stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
             {
                 foreach (var content in contentList)

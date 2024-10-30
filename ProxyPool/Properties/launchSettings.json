@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ProxyPool": {
+      "commandName": "Project",
+      "commandLineArgs": "-u true"
+    }
+  }
+}
