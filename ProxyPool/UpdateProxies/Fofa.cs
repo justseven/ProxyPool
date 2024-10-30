@@ -10,7 +10,7 @@ namespace ProxyPool.UpdateProxies
 {
     public class Fofa
     {
-        private const string FofaKey = "32984e91a27765114c17ef090c286aec"; // 替换为你的 Fofa API 密钥
+        private const string FofaKey = "Your Fofa Api"; // 替换为你的 Fofa API 密钥
         private const string Query = "protocol==\"socks5\" && country=\"CN\" && banner=\"Method:No Authentication\""; // 搜索 SOCKS5 代理的查询条件
 
         public static async Task Start()
