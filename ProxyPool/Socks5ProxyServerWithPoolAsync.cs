@@ -55,7 +55,8 @@ namespace ProxyPool
                         {
                             lock (validProxies) // 线程安全地添加到列表
                             {
-                                validProxies.Add((ip.ToString(), port));
+                                if(!validProxies.Contains((ip.ToString(), port)))
+                                    validProxies.Add((ip.ToString(), port));
                             }
                             Console.WriteLine($"可用代理：{ip}:{port}");
                         }
@@ -118,20 +119,10 @@ namespace ProxyPool
 
         private static async Task AppendTextAsync(string filePath, List<string> contentList)
         {
-
-            // 如果 contentList 为空或元素个数为 0，则清空文件内容
-            if (contentList == null || contentList.Count == 0)
-            {
-                using (FileStream stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-                {
-                    stream.SetLength(0); // 清空文件内容
-                }
-                return;
-            }
-
             // 使用 FileStream 异步写入文件，并确保是追加模式
-            using (FileStream stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            using (FileStream stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
             {
+                stream.SetLength(0); // 清空文件内容
                 foreach (var content in contentList)
                 {
                     byte[] encodedText = Encoding.UTF8.GetBytes(content + Environment.NewLine); // 添加换行符

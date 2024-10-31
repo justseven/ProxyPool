@@ -10,7 +10,7 @@ namespace ProxyPool.UpdateProxies
 {
     public class Fofa
     {
-        private const string FofaKey = "Your Fofa Api"; // 替换为你的 Fofa API 密钥
+        private const string FofaKey = "Your Fofa Key"; // 替换为你的 Fofa API 密钥
         private const string Query = "protocol==\"socks5\" && country=\"CN\" && banner=\"Method:No Authentication\""; // 搜索 SOCKS5 代理的查询条件
 
         public static async Task Start()
@@ -32,7 +32,7 @@ namespace ProxyPool.UpdateProxies
             using var httpClient = new HttpClient();
             // 将查询条件进行 Base64 编码
             var encodedQuery = Convert.ToBase64String(Encoding.UTF8.GetBytes(Query));
-            string url = $"https://fofa.info/api/v1/search/all?key={FofaKey}&qbase64={encodedQuery}&fields=ip,port&size=300";
+            string url = $"https://fofa.info/api/v1/search/all?key={FofaKey}&qbase64={encodedQuery}&fields=ip,port&size=500";
             
             var response = await httpClient.GetStringAsync(url);
             var json = JObject.Parse(response);
