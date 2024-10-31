@@ -83,6 +83,8 @@ namespace ProxyPool
         {
             try
             {
+                if (ip.Contains("111.177.35"))
+                    return false;
                 var handler = new HttpClientHandler
                 {
                     Proxy = new WebProxy(ip, port),

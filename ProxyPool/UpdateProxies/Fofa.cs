@@ -48,7 +48,8 @@ namespace ProxyPool.UpdateProxies
             {
                 string ip = results[i][0].ToString();
                 string port = results[i][1].ToString();
-                proxies[i] = $"{ip}:{port}";
+                if(!ip.Contains("111.177.35"))
+                    proxies[i] = $"{ip}:{port}";
             }
 
             return proxies;
@@ -60,6 +61,7 @@ namespace ProxyPool.UpdateProxies
             using (FileStream stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
             using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
             {
+                writer.WriteLine();
                 foreach (var proxy in proxies)
                 {
                     await writer.WriteLineAsync(proxy);
